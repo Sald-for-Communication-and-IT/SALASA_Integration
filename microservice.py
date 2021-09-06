@@ -444,7 +444,7 @@ def main():
     #uvicorn.run("microservice:app",host='0.0.0.0', port=port, reload=True, debug=True, workers=3) 
     #uvicorn.run("microservice:app",host='0.0.0.0', port=port)
     config = Config()
-    config.bind = ["0.0.0.0:5000"]
+    config.bind = ["0.0.0.0:" + str(port)]
     asyncio.run(serve(app, config))
 
 if __name__ == '__main__':
