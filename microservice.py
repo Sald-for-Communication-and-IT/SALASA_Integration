@@ -27,17 +27,17 @@ from amsLib_3_MongoClient import Mongo_Client
 
 #app = FastAPI(root_path="/templates")
 app = FastAPI()
-app.mount("/templates", StaticFiles(directory= os.path.dirname(os.path.abspath(__file__)) + '\\' +'templates\\', html = True))
+app.mount("/templates", StaticFiles(directory= os.path.dirname(os.path.abspath(__file__)) + '/' +'templates', html = True))
 """
 app.include_router(
     APIRoute(path="/templates/",endpoint=app),
     prefix="/api",
 )
 """
-templates = Jinja2Templates(directory=os.path.dirname(os.path.abspath(__file__)) + '\\' +'templates')
+templates = Jinja2Templates(directory=os.path.dirname(os.path.abspath(__file__)) + '/' +'templates')
 
 app_config = {
-    'DATABASE': os.path.dirname(os.path.abspath(__file__)) + '\\' + 'ws.db',
+    'DATABASE': os.path.dirname(os.path.abspath(__file__)) + '/' + 'ws.db',
     'DEBUG': True,
     'SECRET_KEY': 'development key',
     'USERNAME': 'admin',
