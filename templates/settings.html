@@ -1,0 +1,264 @@
+{% extends "_layout.html" %}
+
+{% block head %}
+<style>
+    label {
+        color: black;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row page-titles mx-0">
+    <div class="col-sm-12 p-md-0">
+        <div class="welcome-text">
+            <h4>Application Settings</h4>
+            <p class="mb-1">View &Update</p>
+        </div>
+    </div>
+</div>
+<!-- row -->
+<form class="form-valide" action="/settings_update" method="post" style="width: 100%;">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">Service Settings</h4>
+                </div>
+                <div class="card-body">
+                    <div class="form-validation">
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <div class="form-group row">
+                                    <label class="col-lg-4 col-form-label" for="val-wms_ws_sleep">
+                                        Sleep Time (s):<span class="text-danger">*</span>
+                                    </label>
+                                    <div class="col-lg-6">
+                                        <input type="number" class="form-control" id="val-wms_ws_sleep" name="val-wms_ws_sleep" max="300" min="0" value="{{ data.wms_ws_sleep }}">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group row">
+                                    <label class="col-lg-4 col-form-label" for="val-wms_ws_sleep">
+                                        GMT (+/-):<span class="text-danger">*</span>
+                                    </label>
+                                    <div class="col-lg-6">
+                                        <input type="number" class="form-control" id="val-t_gmt" name="val-t_gmt" max="12" min="-12" value="{{ data.t_gmt }}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">WMS Data Connection</h4>
+                </div>
+                <div class="card-body">
+                    <div class="form-validation">
+                        <div class="row">
+                            <div class="col-xl-12">
+                                <div class="form-group row">
+                                    <label class="col-lg-2 col-form-label" for="val-wms_host">
+                                        WMS Host:
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="col-lg-10">
+                                        <input type="text" class="form-control" id="val-wms_host" name="val-wms_host" placeholder="https://tb9.wms.ocs.oraclecloud.com:443/salasa_test/wms" value="{{ data.wms_host }}">
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="col-lg-2 col-form-label" for="val-wms_task_params">
+                                        Task API Parameters: <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="col-lg-10">
+                                        <input type="text" class="form-control" id="val-wms_task_params" name="val-wms_task_params" placeholder="Parameters for Task Rest-API" value="{{ data.wms_task_params }}">
+                                    </div>
+                                </div>
+                                <div class="row" style="background: ghostwhite; padding-top: 5px; margin-bottom: 10px; ">
+                                    <!-- Nav tabs -->
+                                    <label class="col-xl-2 col-form-label" for="val-wms_task_params">
+                                        Auth:
+                                    </label>
+                                    <div class="col-xl-2">
+                                        <div class="nav flex-column nav-pills" style="border: 1px solid #8c8c8c;">
+                                            <a href="#v-pills-home" data-toggle="pill" class="nav-link {{ "active show" if data.wms_auth_type == "1" else "" }}">Basic Auth</a>
+                                            <a href="#v-pills-profile" data-toggle="pill" class="nav-link {{ "active show" if data.wms_auth_type != "1" else "" }}">API Key</a>
+                                        </div>
+                                    </div>
+                                    <div class="col-xl-8">
+                                        <input type="hidden" class="form-control" id="val-wms_auth_type" name="val-wms_auth_type" placeholder="User" value="{{ data.wms_auth_type }}">
+                                        <div class="tab-content" style="padding-top: 10px;">
+                                            <div id="v-pills-home" class="tab-pane fade {{ "active show" if data.wms_auth_type == "1" else "" }}">
+                                                <div class="basic-form">
+                                                    <div class="form-inline">
+                                                        <div class="form-group mx-sm-3 mb-2">
+                                                            <!--<label class="sr-only">User</label>-->
+                                                            <input type="text" class="form-control" id="val-wms_auth_user" name="val-wms_auth_user" placeholder="User" value="{{ data.wms_auth_user }}">
+                                                        </div>
+                                                        <div class="form-group mx-sm-3 mb-2">
+                                                            <!--<label class="sr-only">Password</label>-->
+                                                            <input type="password" class="form-control" id="val-wms_auth_pass" name="val-wms_auth_pass" placeholder="Password" value="{{ data.wms_auth_pass }}">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div id="v-pills-profile" class="tab-pane fade {{ "active show" if data.wms_auth_type != "1" else "" }}">
+                                                <div class="form-inline">
+                                                    <div class="form-group mx-sm-3 mb-2" style="width: 98%;">
+                                                        <label class="sr-only">API Key</label>
+                                                        <input type="text" class="form-control" id="val-wms_auth_key" name="val-wms_auth_key" placeholder="API Key" style="width: 100%;" value="{{ data.wms_auth_key }}">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-xl-6">
+                                <div class="form-group row">
+                                    <label class="col-lg-4 col-form-label" for="val-wms_threshold">
+                                        Time Threshold:
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="col-lg-6">
+                                        <input type="text" class="form-control" id="val-wms_threshold" name="val-wms_threshold" placeholder="30" value="{{ data.wms_threshold }}">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-xl-6">
+                                <div class="form-group row">
+                                    <label class="col-lg-4 col-form-label" for="val-wms_threshold_type">
+                                        Threshold Type:
+                                    </label>
+                                    <div class="col-lg-6">
+                                        <select class="form-control" id="val-wms_threshold_type" name="val-wms_threshold_type" value="{{ data.wms_threshold_type }}">
+                                            <option value="d" {{ "selected" if data.wms_threshold_type == "d" else "" }}>Unlimited</option>
+                                            <option value="s" {{ "selected" if data.wms_threshold_type == "s" else "" }}>Seconds</option>
+                                            <option value="m" {{ "selected" if data.wms_threshold_type == "m" else "" }}>Minutes</option>
+                                            <option value="h" {{ "selected" if data.wms_threshold_type == "h" else "" }}>Hours</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">FMS Data Connection</h4>
+                </div>
+                <div class="card-body">
+                    <div class="form-validation">
+                        <div class="row">
+                            <div class="col-xl-12">
+                                <div class="form-group row">
+                                    <label class="col-lg-2 col-form-label" for="val-fms_host">
+                                        FMS Host:
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="col-lg-10">
+                                        <input type="text" class="form-control" id="val-fms_host" name="val-fms_host" placeholder="http://18.156.142.70/api/v1" value="{{ data.fms_host }}">
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="col-lg-2 col-form-label" for="val-fms_Robots_params">
+                                        Robots API Parameters: <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="col-lg-10">
+                                        <input type="text" class="form-control" id="val-fms_Robots_params" name="val-fms_Robots_params" placeholder="Parameters for Task Rest-API" value="{{ data.fms_Robots_params }}">
+                                    </div>
+                                </div>
+                                <div class="row" style="background: ghostwhite; padding-top: 5px; margin-bottom: 10px; ">
+                                    <!-- Nav tabs -->
+                                    <label class="col-xl-2 col-form-label" for="val-wms_task_params">
+                                        Auth:
+                                    </label>
+                                    <div class="col-xl-2">
+                                        <div class="nav flex-column nav-pills" style="border: 1px solid #8c8c8c;">
+                                            <a href="#v-pills-home2" data-toggle="pill" class="nav-link {{ "active show" if data.fms_auth_type == "1" else "" }}">Basic Auth</a>
+                                            <a href="#v-pills-profile2" data-toggle="pill" class="nav-link {{ "active show" if data.fms_auth_type != "1" else "" }}">API Key</a>
+                                        </div>
+                                    </div>
+                                    <div class="col-xl-8">
+                                        <input type="hidden" class="form-control" id="val-fms_auth_type" name="val-fms_auth_type" placeholder="User" value="{{ data.fms_auth_type }}">
+                                        <div class="tab-content" style="padding-top: 10px;">
+                                            <div id="v-pills-home2" class="tab-pane fade {{ "active show" if data.fms_auth_type == "1" else "" }}">
+                                                <div class="basic-form">
+                                                    <div class="form-inline">
+                                                        <div class="form-group mx-sm-3 mb-2">
+                                                            <!--<label class="sr-only">User</label>-->
+                                                            <input type="text" class="form-control" id="val-fms_auth_user" name="val-fms_auth_user" placeholder="User" value="{{ data.fms_auth_user }}">
+                                                        </div>
+                                                        <div class="form-group mx-sm-3 mb-2">
+                                                            <!--<label class="sr-only">Password</label>-->
+                                                            <input type="password" class="form-control" id="val-fms_auth_pass" name="val-fms_auth_pass" placeholder="Password" value="{{ data.fms_auth_pass }}">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div id="v-pills-profile2" class="tab-pane fade {{ "active show" if data.fms_auth_type != "1" else "" }}">
+                                                <div class="form-inline">
+                                                    <div class="form-group mx-sm-3 mb-2" style="width: 98%;">
+                                                        <label class="sr-only">API Key</label>
+                                                        <input type="text" class="form-control" id="val-fms_auth_key" name="val-fms_auth_key" placeholder="Auth API Key" style="width: 100%;" value="{{ data.fms_auth_key }}">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row page-titles">
+        <div class="col-sm-12">
+            <div class="row">
+                <div class="mx-auto">
+                    <button type="reset" class="btn btn-rounded btn-warning" style="margin-right:30px;">Reset</button>
+                    <button type="submit" class="btn btn-rounded btn-success">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<!-- Jquery Validation -->
+<script src="templates/vendor/jquery-validation/jquery.validate.min.js"></script>
+<!-- Form validate init -->
+<script src="templates/js/plugins-init/jquery.validate-init.js"></script>
+<script>
+    $("a.nav-link").click(function () {
+        val = $(this).attr("href");
+        switch (val) {
+            case "#v-pills-home":
+                $("input#val-wms_auth_type").val(1);
+                break;
+            case "#v-pills-profile":
+                $("input#val-wms_auth_type").val(2);
+                break;
+            case "#v-pills-home2":
+                $("input#val-fms_auth_type").val(1);
+                break;
+            case "#v-pills-profile2":
+                $("input#val-fms_auth_type").val(2);
+                break;
+        }
+    });
+</script>
+{% endblock %}
