@@ -1,5 +1,6 @@
 import asyncio
 from asyncio.tasks import sleep
+from typing import Optional
 from hypercorn.config import Config
 from hypercorn.asyncio import serve
 from datetime import datetime, time, timedelta
@@ -23,7 +24,7 @@ from starlette.types import Message
 from amsLib_1_Oracle_WMS_Data import Oracle_WMS_Data
 from amsLib_2_Milvus_FMS_Data import Milvus_FMS_Data
 from amsLib_3_MongoClient import Mongo_Client
-
+from amsLib_4_GeoTagGenerator import GeoTagGenerator
 
 #app = FastAPI(root_path="/templates")
 app = FastAPI()
@@ -54,6 +55,7 @@ __Message = ""
 obj_WMS = None
 obj_FMS = None
 tGMT = 0
+objMongoClient = Mongo_Client()
 WMS_RobotsWMS_ts = str(datetime(2000, 1, 1))
 #FMS_RobotsFMS_ts = str(datetime(2000, 1, 1))
 Service_State = {"start": False, "cancle": True, "start_ts": (datetime.now() + timedelta(hours=tGMT)).strftime('%Y-%m-%d %H:%M:%S.%f'), "duration": time().strftime('%m-%d %H:%M:%S.%f'), "timestamp": (datetime.now() + timedelta(hours=tGMT)).strftime('%Y-%m-%d %H:%M:%S.%f'), "response": time().strftime('%H:%M:%S.%f'), "WMS_Connected": False, "FMS_Connected": False}
@@ -117,7 +119,7 @@ async def Run_Service():
     # Runs in this event loop
     global settings_data,WMS_API_sleep, porcess_i, Service_State, tGMT
     global obj_WMS, obj_FMS, obj_DB_Client, WMS_RobotsWMS_ts
-    settings_data = get_dbsetting()
+    settings_data = objMongoClient.get_dbsetting()
     #print("Run_Service")
     try:
         host = get_keyData('wms_host')
@@ -142,10 +144,11 @@ async def Run_Service():
         obj_WMS = Oracle_WMS_Data(host,task_params,threshold_N,threshold_Type, wms_auth_type, wms_auth_user, wms_auth_pass, wms_auth_key, 0)
         obj_FMS =  Milvus_FMS_Data(fms_host,fms_Robots_params, fms_auth_type, fms_auth_user, fms_auth_pass, fms_auth_key)
 
-        db = get_db()
-        cur = db.execute("SELECT max(mod_ts) max_mod_ts FROM RobotsWMS_Log")
-        rows = cur.fetchall()
-        max_mod_ts = rows [0]["max_mod_ts"]
+        #db = get_db()
+        #cur = db.execute("SELECT max(mod_ts) max_mod_ts FROM RobotsWMS_Log")
+        #rows = cur.fetchall()
+        #max_mod_ts = rows [0]["max_mod_ts"]
+        max_mod_ts = objMongoClient.get_max_val("RobotsWMS_Log","mod_ts")
         if(bool(max_mod_ts)):
             WMS_RobotsWMS_ts = max_mod_ts
 
@@ -162,7 +165,7 @@ async def Run_Service():
                 #print(("i: {}, sleep: {},data: {}").format(porcess_i,WMS_API_sleep,obj_WMS.WMS_Task_data))
                 if(bool(WMS_API_sleep)):
                     await sleep(WMS_API_sleep)
-                    asyncio.ensure_future(async_FMS_Robots_processor())
+                asyncio.ensure_future(async_FMS_Robots_processor())
                     #async_FMS_Robots_processor()
                 tTime = datetime.now() + timedelta(hours=tGMT)
                 Service_State["duration"] = str(tTime - datetime.strptime(Service_State["start_ts"], '%Y-%m-%d %H:%M:%S.%f'))
@@ -246,43 +249,43 @@ async def settings_update(request: Request):
     form = await request.form() #await request.form
 
     if(bool(form["val-wms_ws_sleep"]) and form["val-wms_ws_sleep"] != get_keyData('wms_ws_sleep')):
-        update_DB_key(db,'wms_ws_sleep', form['val-wms_ws_sleep'])
+        objMongoClient.update_DB_key('wms_ws_sleep', form['val-wms_ws_sleep'])
     if(bool(form["val-t_gmt"]) and form["val-t_gmt"] != get_keyData('t_gmt')):
-        update_DB_key(db,'t_gmt', form['val-t_gmt'])
+        objMongoClient.update_DB_key('t_gmt', form['val-t_gmt'])
 
     if(bool(form["val-wms_host"]) and form["val-wms_host"] != get_keyData('wms_host')):
-        update_DB_key(db,'wms_host', form['val-wms_host'])
+        objMongoClient.update_DB_key('wms_host', form['val-wms_host'])
     if(bool(form["val-wms_task_params"]) and form["val-wms_task_params"] != get_keyData('wms_task_params')):
-        update_DB_key(db,'wms_task_params', form['val-wms_task_params'])
+        objMongoClient.update_DB_key('wms_task_params', form['val-wms_task_params'])
     if(bool(form["val-wms_threshold"]) and form["val-wms_threshold"] != get_keyData('wms_threshold')):
-        update_DB_key(db,'wms_threshold', form['val-wms_threshold'])
+        objMongoClient.update_DB_key('wms_threshold', form['val-wms_threshold'])
     if(bool(form["val-wms_threshold_type"]) and form["val-wms_threshold_type"] != get_keyData('wms_threshold_type')):
-        update_DB_key(db,'wms_threshold_type', form['val-wms_threshold_type'])
+        objMongoClient.update_DB_key('wms_threshold_type', form['val-wms_threshold_type'])
     if(bool(form["val-wms_auth_type"]) and form["val-wms_auth_type"] != get_keyData('wms_auth_type')):
-        update_DB_key(db,'wms_auth_type', form['val-wms_auth_type'])
+        objMongoClient.update_DB_key('wms_auth_type', form['val-wms_auth_type'])
     if(bool(form["val-wms_auth_user"]) and form["val-wms_auth_user"] != get_keyData('wms_auth_user')):
-        update_DB_key(db,'wms_auth_user', form['val-wms_auth_user'])
+        objMongoClient.update_DB_key('wms_auth_user', form['val-wms_auth_user'])
     if(bool(form["val-wms_auth_pass"]) and form["val-wms_auth_pass"] != get_keyData('wms_auth_pass')):
-        update_DB_key(db,'wms_auth_pass', form['val-wms_auth_pass'])
+        objMongoClient.update_DB_key('wms_auth_pass', form['val-wms_auth_pass'])
     if(bool(form["val-wms_auth_key"]) and form["val-wms_auth_key"] != get_keyData('wms_auth_key')):
-        update_DB_key(db,'wms_auth_key', form['val-wms_auth_key'])
+        objMongoClient.update_DB_key('wms_auth_key', form['val-wms_auth_key'])
  
     if(bool(form["val-fms_host"]) and form["val-fms_host"] != get_keyData('fms_host')):
-        update_DB_key(db,'fms_host', form['val-fms_host'])
+        objMongoClient.update_DB_key('fms_host', form['val-fms_host'])
     if(bool(form["val-fms_Robots_params"]) and form["val-fms_Robots_params"] != get_keyData('fms_Robots_params')):
-        update_DB_key(db,'fms_Robots_params', form['val-fms_Robots_params'])
+        objMongoClient.update_DB_key('fms_Robots_params', form['val-fms_Robots_params'])
     if(bool(form["val-fms_auth_type"]) and form["val-fms_auth_type"] != get_keyData('fms_auth_type')):
-        update_DB_key(db,'fms_auth_type', form['val-fms_auth_type'])
+        objMongoClient.update_DB_key('fms_auth_type', form['val-fms_auth_type'])
     if(bool(form["val-fms_auth_user"]) and form["val-fms_auth_user"] != get_keyData('fms_auth_user')):
-        update_DB_key(db,'fms_auth_user', form['val-fms_auth_user'])
+        objMongoClient.update_DB_key('fms_auth_user', form['val-fms_auth_user'])
     if(bool(form["val-fms_auth_pass"]) and form["val-fms_auth_pass"] != get_keyData('fms_auth_pass')):
-        update_DB_key(db,'fms_auth_pass', form['val-fms_auth_pass'])
+        objMongoClient.update_DB_key('fms_auth_pass', form['val-fms_auth_pass'])
     if(bool(form["val-fms_auth_key"]) and form["val-fms_auth_key"] != get_keyData('fms_auth_key')):
-        update_DB_key(db,'fms_auth_key', form['val-fms_auth_key'])
+        objMongoClient.update_DB_key('fms_auth_key', form['val-fms_auth_key'])
 
     db.commit()
     global settings_data
-    settings_data = get_dbsetting()
+    settings_data = objMongoClient.get_dbsetting()
     #await flash('data was successfully updated')
     #return redirect(url_for('settings'))
     #context = {"request": request}
@@ -366,23 +369,44 @@ async def getsettings():
 
 @app.get("/logfmsrobots")
 async def logfmsrobots():
-    db = get_db()
-    cur = db.execute("SELECT ID_N, id, task_nbr, cart_nbr, location, status_id, mod_ts, ts FROM RobotsWMS_Log ORDER BY mod_ts desc,task_nbr")
-    rows = cur.fetchall()
-    arr_data = []
-    for row in rows:
-        arr_data.append({"ID_N": row["ID_N"], "id": row["id"], "task_nbr": row["task_nbr"], "cart_nbr": row['cart_nbr'], "location": row["location"], "status_id": row["status_id"], "mod_ts": row["mod_ts"], "ts": row["ts"]})
+    #db = get_db()
+    #cur = db.execute("SELECT ID_N, id, task_nbr, cart_nbr, location, status_id, mod_ts, ts FROM RobotsWMS_Log ORDER BY mod_ts desc,task_nbr")
+    #rows = cur.fetchall()
+    #arr_data = []
+    #for row in rows:
+    #    arr_data.append({"ID_N": row["ID_N"], "id": row["id"], "task_nbr": row["task_nbr"], "cart_nbr": row['cart_nbr'], "location": row["location"], "status_id": row["status_id"], "mod_ts": row["mod_ts"], "ts": row["ts"]})
+    arr_data = objMongoClient.get_RobotsWMS_Log()
     return  {"data": arr_data}
 
 @app.get("/logallocations")
 async def logallocations():
-    db = get_db()
-    cur = db.execute("SELECT FK_N, id, create_ts, order_dtl_id, status_id, type, wave_id, wave_nbr, task_id, task_seq_nbr, mhe_system_id, pick_user, picked_ts, pick_locn_str, is_picking_flg, ts FROM allocation_Log ORDER BY FK_N,task_seq_nbr")
-    rows = cur.fetchall()
-    arr_data = []
-    for row in rows:
-        arr_data.append({"FK_N": row["FK_N"], "id": row["id"], "create_ts": row["create_ts"], "order_dtl_id": row["order_dtl_id"], "status_id": row["status_id"], "type": row["type"], "wave_id": row["wave_id"], "wave_nbr": row["wave_nbr"], "task_id": row["task_id"], "task_seq_nbr": row["task_seq_nbr"], "mhe_system_id": row["mhe_system_id"], "pick_user": row["pick_user"], "picked_ts": row["picked_ts"], "pick_locn_str": row["pick_locn_str"], "is_picking_flg": row["is_picking_flg"], "ts": row["ts"]})
+    #db = get_db()
+    #cur = db.execute("SELECT FK_N, id, create_ts, order_dtl_id, status_id, type, wave_id, wave_nbr, task_id, task_seq_nbr, mhe_system_id, pick_user, picked_ts, pick_locn_str, is_picking_flg, ts FROM allocation_Log ORDER BY FK_N,task_seq_nbr")
+    #rows = cur.fetchall()
+    #arr_data = []
+    #for row in rows:
+    #    arr_data.append({"FK_N": row["FK_N"], "id": row["id"], "create_ts": row["create_ts"], "order_dtl_id": row["order_dtl_id"], "status_id": row["status_id"], "type": row["type"], "wave_id": row["wave_id"], "wave_nbr": row["wave_nbr"], "task_id": row["task_id"], "task_seq_nbr": row["task_seq_nbr"], "mhe_system_id": row["mhe_system_id"], "pick_user": row["pick_user"], "picked_ts": row["picked_ts"], "pick_locn_str": row["pick_locn_str"], "is_picking_flg": row["is_picking_flg"], "ts": row["ts"]})
+    arr_data = objMongoClient.get_allocation_Log()
     return  {"data": arr_data}
+
+@app.get("/activelocation")
+async def activelocation():
+    return obj_WMS.sync_WMS_active_location()
+
+@app.get('/generategeotags')
+async def generategeotags(vAreaLevel:Optional[str] = 'AL', vLevel:Optional[int] = 1, v_ZNo:Optional[int] = 1, vOrigin_X:Optional[float] = 0, vOrigin_Y:Optional[float] = 0, vyaw:Optional[float] = 0, 
+                          vResolution:Optional[float] = 0.0161, vImage_Height:Optional[float] = 4722, vImage_Width:Optional[float] = 2547, vMapId:Optional[str] = '60d1d06b682c63fce6345bb7', 
+                          vAisle_Total_Z1:Optional[int] = 12, vAisle_Total_Z2:Optional[int] = 24, vBaysPerAisle:Optional[int] = 16, vMaxSections1:Optional[int] = 4, vMaxSections2:Optional[int] = 5,
+                          vMaxShelves:Optional[int] = 5, vd_Aisle:Optional[float] = 0, vZoneYardLength:Optional[float] = 5.1, vFirstBaywidth:Optional[float] = 0.6, vAislesWdth:Optional[float] = 1.2, 
+                          vBay_Length_1:Optional[float] = 1.76, vBay_Length_2:Optional[float] = 2.17, vBay_Width_z1:Optional[float] = 1.2, vBay_Width_z2:Optional[float] = 0.8, vdX:Optional[float] = 0, 
+                          vdY:Optional[float] = 0.2, vJSON:Optional[int] = 1):
+    GeoTags = GeoTagGenerator()
+    ret = GeoTags.salasGeotags(vAreaLevel, vLevel, v_ZNo, vOrigin_X, vOrigin_Y, vyaw, vResolution, vImage_Height, vImage_Width, 
+                                                                                      vMapId, vAisle_Total_Z1, vAisle_Total_Z2, vBaysPerAisle, vMaxSections1, vMaxSections2, 
+                                                                                      vMaxShelves, vd_Aisle, vZoneYardLength, vFirstBaywidth, vAislesWdth, vBay_Length_1, vBay_Length_2, 
+                                                                                      vBay_Width_z1, vBay_Width_z2, vdX, vdY, vJSON)
+    print(ret)
+    return ret
 
 ##-------- AMS Work ---------
 
@@ -396,25 +420,37 @@ async def async_WMS_allocation_processor():
     global obj_WMS, WMS_RobotsWMS_ts
     iret = await asyncio.get_running_loop().run_in_executor(None, obj_WMS.sync_WMS_allocation_processor)
 
-    if(WMS_RobotsWMS_ts != obj_WMS.RobotsWMS_ts):
-        db = get_db()
+    if(WMS_RobotsWMS_ts != obj_WMS.RobotsWMS_ts and obj_WMS.RobotsWMS_ts != None):
+        #db = get_db()
         rows = list(filter(lambda item: item['mod_ts'] > WMS_RobotsWMS_ts, obj_WMS.RobotsWMS_ar))
         if(len(rows) > 0):
             ts = datetime.now() + timedelta(hours=tGMT)
+            ID_N = objMongoClient.get_max_val("RobotsWMS_Log","ID_N")
+            ID_N = ID_N if bool(ID_N) else 0 
             for row in rows:
-                cur = db.execute(
-                "INSERT INTO RobotsWMS_Log (id, task_nbr, cart_nbr, location, status_id, mod_ts, ts) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                [row['id'], row['task_nbr'], row['cart_nbr'], row['location'], row['status_id'], row['mod_ts'], ts],
-                )
-                FK_N = cur.lastrowid
+                #cur = db.execute(
+                #"INSERT INTO RobotsWMS_Log (id, task_nbr, cart_nbr, location, status_id, mod_ts, ts) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                #[row['id'], row['task_nbr'], row['cart_nbr'], row['location'], row['status_id'], row['mod_ts'], ts],
+                #)
+                ID_N += 1
+                mydict = {"ID_N": ID_N, 'id': row['id'], 'task_nbr': row['task_nbr'], 'cart_nbr': row['cart_nbr'], 'location': row['location'], 'status_id': row['status_id'], 'mod_ts': row['mod_ts'], 'ts': ts}
+                objMongoClient.insert_RobotsWMS_Log(mydict)
+                #FK_N = cur.lastrowid
+                FK_N = ID_N
                 rows2 = list(filter(lambda item: item['task_id'] == row['id'], obj_WMS.WMS_allocation_data))
+                ID_N2 = objMongoClient.get_max_val("allocation_Log","ID_N")
+                ID_N2 = ID_N2 if bool(ID_N2) else 0 
                 for row2 in rows2:
-                    db.execute("""INSERT INTO allocation_Log (FK_N, id, create_ts, order_dtl_id, status_id, type, wave_id, wave_nbr, task_id, task_seq_nbr, mhe_system_id, pick_user, picked_ts, pick_locn_str, is_picking_flg, ts)
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                     [FK_N, row2['id'], row2['create_ts'], row2['order_dtl_id'], row2['status_id'], row2['type'], row2['wave_id'], row2['wave_nbr'], row2['task_id'], row2['task_seq_nbr'], row2['mhe_system_id'], row2['pick_user'], row2['picked_ts'], row2['pick_locn_str'], row2['is_picking_flg'], ts],
-                    )
-            db.commit()
-        WMS_RobotsWMS_ts = obj_WMS.RobotsWMS_ts
+                    ID_N2 += 1
+                    mydict = {"ID_N": ID_N2, 'FK_N':FK_N, 'id': row2['id'], 'create_ts': row2['create_ts'], 'order_dtl_id': row2['order_dtl_id'], 'status_id': row2['status_id'], 'type': row2['type'], 'wave_id': row2['wave_id'], 'wave_nbr': row2['wave_nbr'], 'task_id': row2['task_id'], 'task_seq_nbr': row2['task_seq_nbr'], 'mhe_system_id': row2['mhe_system_id'], 'pick_user': row2['pick_user'], 'picked_ts': row2['picked_ts'], 'pick_locn_str': row2['pick_locn_str'], 'is_picking_flg': row2['is_picking_flg'], 'ts': ts}
+                    objMongoClient.insert_allocation_Log(mydict)
+                    #db.execute("""INSERT INTO allocation_Log (FK_N, id, create_ts, order_dtl_id, status_id, type, wave_id, wave_nbr, task_id, task_seq_nbr, mhe_system_id, pick_user, picked_ts, pick_locn_str, is_picking_flg, ts)
+                     #VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                     #[FK_N, row2['id'], row2['create_ts'], row2['order_dtl_id'], row2['status_id'], row2['type'], row2['wave_id'], row2['wave_nbr'], row2['task_id'], row2['task_seq_nbr'], row2['mhe_system_id'], row2['pick_user'], row2['picked_ts'], row2['pick_locn_str'], row2['is_picking_flg'], ts],
+                    #)
+            #db.commit()
+        if obj_WMS.RobotsWMS_ts != None:
+            WMS_RobotsWMS_ts = obj_WMS.RobotsWMS_ts
 
 async def async_FMS_Robots_processor():
     #global obj_FMS

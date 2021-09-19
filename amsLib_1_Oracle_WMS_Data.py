@@ -173,8 +173,8 @@ class Oracle_WMS_Data:
             #return arr_data
         except Exception as e: 
             iRet = 0
-            self.task_State["Error_Message"] = str(e)
             print(e)
+            self.task_State["Error_Message"] = e #str(e)
         return iRet
 
     def sync_WMS_allocation_processor(self):
@@ -239,6 +239,57 @@ class Oracle_WMS_Data:
             #return arr_data
         except Exception as e: 
             iRet = 0
+            print(e)
             self.allocation_State["Error_Message"] = str(e)
+        return iRet
+
+    def sync_WMS_active_location(self):
+        arr_data = []
+        iRet = {"data":arr_data}
+        try:
+            #s_URI_Params = ",".join([str(element["id"]) for element in self.WMS_Task_data])
+        
+            s_URI_Params = '?ordering=area,-alloc_zone,locn_str&fields=id,locn_str,alloc_zone,area,type_id&area=AL1'
+            sUrl = self.v_host + '/lgfapi/v10/entity/active_location' + s_URI_Params
+
+            #print(sUrl)
+            headers = {'Content-Type': 'application/json'}
+
+            def consume_location_API(sUrl):
+                auth = None
+                results = {}
+                try:
+                    if (self.auth_type == '1'):
+                        auth=( self.auth_user, self.auth_pass)
+                    else:
+                        headers['api-key'] = self.auth_key
+
+                    request = requests.get(sUrl, auth = auth, headers = headers)
+                    results = request.json()
+                    if ("results" not in results):
+                        return iRet
+
+                    rCount=len(results['results'])
+                    for i in range(rCount):
+                        dd ={'id': results['results'][i]['id']
+                        ,'locn_str': results['results'][i]['locn_str']
+                        ,'type_id': results['results'][i]['type_id']['id'] if results['results'][i]['type_id'] != None else None
+                        ,'type': results['results'][i]['type_id']['key'] if results['results'][i]['type_id'] != None else None
+                        ,'area': results['results'][i]['area']
+                        ,'alloc_zone': results['results'][i]['alloc_zone']
+                        }
+                        arr_data.append(dd)
+                except Exception as e: 
+                    print(e)
+                finally:
+                    pass
+
+                if(results["next_page"] != None):
+                    sUrl = results["next_page"]
+                    consume_location_API(sUrl)
+
+            consume_location_API(sUrl)
+            iRet = {"data":arr_data}
+        except Exception as e: 
             print(e)
         return iRet
