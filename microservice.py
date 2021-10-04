@@ -252,7 +252,7 @@ async def getUsers_Delete(request: Request, id:int = None):
         else:
             data = {"id": 0, "Email": ""}
         context = {"request": request, "data": data}
-        r = templates.TemplateResponse("Users_Delete.html", context)
+        r = templates.TemplateResponse("users_delete.html", context)
     return r
 
 @app.post("/Users_Delete")
