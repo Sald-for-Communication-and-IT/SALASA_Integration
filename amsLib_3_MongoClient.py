@@ -1,6 +1,9 @@
 from pymongo import MongoClient
 from random import randint
 
+import hashlib
+import certifi
+
 class Mongo_Client:
     db: None
     
@@ -8,8 +11,67 @@ class Mongo_Client:
         #Step 1: Connect to MongoDB - Note: Change connection string as needed
         #client = MongoClient(port=27017)
         #self.db=client.integration
-        client = MongoClient("mongodb://ams:asdasd@cluster0-shard-00-00.6jgxe.mongodb.net:27017,cluster0-shard-00-01.6jgxe.mongodb.net:27017,cluster0-shard-00-02.6jgxe.mongodb.net:27017/myFirstDatabase?ssl=true&replicaSet=atlas-vp4p7q-shard-0&authSource=admin&retryWrites=true&w=majority")
+        client = MongoClient("mongodb+srv://ams:asdasd@cluster0.6jgxe.mongodb.net/test?authSource=admin&replicaSet=atlas-vp4p7q-shard-0&readPreference=primary&appname=MongoDB%20Compass&ssl=true",tlsCAFile=certifi.where())
+        #client = MongoClient(host='mongodb+srv://cluster0.6jgxe.mongodb.net', port=27017, connect=True,username="ams", password="asdasd")
+        #client = MongoClient("mongodb://ams:asdasd@cluster0-shard-00-00.6jgxe.mongodb.net:27017,cluster0-shard-00-01.6jgxe.mongodb.net:27017,cluster0-shard-00-02.6jgxe.mongodb.net:27017/myFirstDatabase?ssl=true&replicaSet=atlas-vp4p7q-shard-0&authSource=admin&retryWrites=true&w=majority")
+        #client = MongoClient("mongodb://ams:asdasd@cluster0.6jgxe.mongodb.net/test?authSource=admin&replicaSet=atlas-vp4p7q-shard-0&readPreference=primary&appname=MongoDB%20Compass&ssl=true")
         self.db = client.ws
+
+    #######################################
+    def hash_password(self,password):
+        hash_object = hashlib.md5(password.encode())
+        return '$' + hash_object.hexdigest()
+
+
+    def Compare_password(self,password,hsah_password):
+        hash_object = hashlib.md5(password.encode())
+        return (hsah_password == '$' + hash_object.hexdigest())
+    #######################################
+
+    def get_users(self,sEmail:str = None,iID:int = None):
+        arr_users = []
+        myquery = { "id": iID } if iID != None else ({ "Email": sEmail } if sEmail != None else {})
+        rows = self.db.users.find(myquery)
+        for row in rows:
+            arr_users.append({"id": row["id"], "Role": row["Role"], "Email": row["Email"], "First Name": row["First Name"], "Last Name": row["Last Name"], "Password": row["Password"]})
+        return arr_users
+    
+    def delete_users(self,sEmail:str = None,iID:int = None):
+        x = 1
+        myquery = { "Email": sEmail } if sEmail != None else ({ "id": iID } if iID != None else {})
+        rows = self.db.users.remove(myquery)
+        #x = rows.deleted_count
+        return x
+
+    def upsert_users(self,dUser:dict):
+        iret = 1
+        try:
+            id = dUser["id"]
+            if("Email" in dUser):
+                dUser["Email"] = dUser["Email"].lower()
+            if("Password" in dUser):
+                dUser["Password"] = self.hash_password(dUser["Password"])
+
+            sKeys = ('id', 'Role','Email','First Name','Last Name','Password')
+
+            if (id == -1):
+                id = 1 + self.get_max_val("users","id")
+                dUser["id"] = id
+                if all(name in sKeys for name in dUser) and all(name in dUser for name in sKeys):
+                    user_dict = {"id": dUser["id"], "Role": dUser["Role"], "Email": dUser["Email"], "First Name": dUser["First Name"], "Last Name": dUser["Last Name"], "Password": dUser["Password"]}
+                    x = self.db.users.insert_one(user_dict)
+                else:
+                    iRet = 0
+            else:
+                if all(name in sKeys for name in dUser):
+                    myquery = { "id": id }
+                    newvalues = { "$set": dUser }
+                    self.db.users.update_one(myquery, newvalues)
+                else:
+                    iRet = 0
+        except Exception as e: 
+            iRet = 0
+        return iret
 
     def get_dbsetting(self):
         arr_setting = []
@@ -25,9 +87,16 @@ class Mongo_Client:
 
     def get_max_val(self,strTable,strKey):
         #max_mod_ts = self.db.RobotsWMS_Log.find({},{"_id":0 ,"mod_ts":1}).sort("mod_ts", -1).limit(1)
+        """
         tbl = self.db.RobotsWMS_Log
         if (strTable.lower() == "allocation_Log".lower()):
             tbl = self.db.allocation_Log
+        elif (strTable.lower() == "users".lower()):
+            tbl = self.db.users
+        else:
+        """
+        tbl = self.db[strTable]
+
         max_mod_ts = tbl.find_one(sort=[(strKey, -1)])
         if(bool(max_mod_ts)):
             max_mod_ts = max_mod_ts[strKey]

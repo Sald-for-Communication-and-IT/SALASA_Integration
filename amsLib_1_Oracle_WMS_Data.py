@@ -49,9 +49,9 @@ class Oracle_WMS_Data:
         self.RobotsWMS_ar = []
         self.RobotsWMS_ts = None
         self.WMS_Task_data = []
-        self.task_State = ""
+        #self.task_State = ""
         self.WMS_allocation_data = []
-        self.allocation_State = ""
+        #self.allocation_State = ""
         self.tGMT = tGMT
 
     def sync_WMS_Task_processor(self):
@@ -174,7 +174,7 @@ class Oracle_WMS_Data:
         except Exception as e: 
             iRet = 0
             print(e)
-            self.task_State["Error_Message"] = e #str(e)
+            self.task_State["Error_Message"] = repr(e) #str(e)
         return iRet
 
     def sync_WMS_allocation_processor(self):
@@ -240,7 +240,7 @@ class Oracle_WMS_Data:
         except Exception as e: 
             iRet = 0
             print(e)
-            self.allocation_State["Error_Message"] = str(e)
+            self.allocation_State["Error_Message"] = repr(e)
         return iRet
 
     def sync_WMS_active_location(self):

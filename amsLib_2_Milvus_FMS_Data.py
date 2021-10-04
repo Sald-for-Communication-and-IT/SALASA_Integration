@@ -101,6 +101,6 @@ class Milvus_FMS_Data:
             #print(("Robots# {},\t {}").format(self.RobotsFMS_ar,len(self.RobotsFMS_ar)))
         except Exception as e: 
             iRet = 0
-            self.Robots_State["Error_Message"] = str(e)
+            self.Robots_State["Error_Message"] = repr(e)
             print(e)
         return iRet
