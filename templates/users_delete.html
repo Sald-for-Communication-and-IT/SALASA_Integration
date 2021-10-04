@@ -1,0 +1,30 @@
+﻿{% block content %}
+<div class="modal-header bg-danger" style="padding-top: 5px; padding-bottom: 5px;">
+    <h4 class="modal-title text-white" id="myModalLabel">Delete User</h4>
+</div>
+<div class="modal-body no-padding" style="background: lavenderblush;">
+
+    <form class="form-valide" action="/Users_Delete" method="post" style="width: 100%;">
+        <div class="smart-form">
+            <fieldset>
+                <section>
+                    <div class="form-group row">
+                        <h4>Are you sure you want to delete this User: {{ data.Email }} ?</h4>
+                        <input type="hidden" class="form-control" id="val-user_id" name="val-user_id" placeholder="User" value="{{ data.id }}">
+                    </div>
+                </section>
+            </fieldset>
+
+            <footer>
+                <button type="button" class="btn btn-info text-white" onclick="Popup.dialog('close');" style="margin-right:30px;">
+                    Exit
+                </button>
+                <button type="submit" class="btn btn-danger text-white">
+                    Delete
+                </button>
+            </footer>
+        </div>
+    </form>
+
+</div>
+{% endblock %}

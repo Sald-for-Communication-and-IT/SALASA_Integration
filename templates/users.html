@@ -1,0 +1,190 @@
+{% extends "_layout.html" %}
+
+{% block head %}
+<!-- Datatable -->
+<link href="templates/vendor/jqueryui/css/jquery-ui.min.css" rel="stylesheet">
+<link href="templates/vendor/datatables/css/jquery.dataTables.min.css" rel="stylesheet">
+<link rel="stylesheet" href="templates/vendor/animate/animate.min.css">
+<style>
+    thead {
+        background: gainsboro;
+    }
+
+    tbody {
+        color: black;
+    }
+
+        tbody > tr > td > div.dataTables_wrapper {
+            background: #f9fafd;
+        }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row page-titles mx-0">
+    <div class="col-sm-6 p-md-0">
+        <div class="welcome-text">
+            <h4>Users List</h4>
+        </div>
+    </div>
+    <div class="col-sm-6 p-md-0 justify-content-sm-end mt-2 mt-sm-0 d-flex">
+        <!--<ol class="breadcrumb">-->
+        <!--<li class="breadcrumb-item"><a href="javascript:void(0)">Table</a></li>
+        <li class="breadcrumb-item active"><a href="javascript:void(0)">Datatable</a></li>-->
+        <!--</ol>-->
+    </div>
+</div>
+<!-- row -->
+
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <!--<div class="card-header">
+                <h4 class="card-title">Users List</h4>
+            </div>-->
+            <div class="card-body">
+                <div class="form-group mb-5"><a href="#" class="btn btn-outline-primary float-right" onclick="PopupForm('/Users_Upsert')">+ NEW USER</a></div>
+                <div class="table-responsive">
+                    <table id="example" class="table thead-light table-striped table-bordered table-hover compact" style="padding:0px; width: 99%;">
+                        <thead>
+                            <tr>
+                                <th>id</th>
+                                <th>Role</th>
+                                <th>Email</th>
+                                <th>First Name</th>
+                                <th>Last Name</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Datatable -->
+<script src="templates/vendor/datatables/js/jquery.dataTables.min.js"></script>
+<!--<script src="templates/js/plugins-init/datatables.init.js"></script>-->
+<script src="templates/vendor/jqueryui/js/jquery-ui.min.js"></script>
+<script src="templates/vendor/jquery-validation/jquery.validate.min.js"></script>
+<script src="templates/vendor/bootstrap4-notify/bootstrap-notify.min.js"></script>
+<script>
+    $(document).ready(function () {
+
+        dataTable = $("#example").DataTable({
+            "iDisplayLength": 25,
+            "bDestroy": true,
+            "iDisplayLength": 25,
+            "autoWidth": true,
+            "bProcessing": true,
+            "bFilter": true,
+            "responsive": true,
+            "deferRender": true,
+            "ajax": {
+                "url": "/getusers",
+                "type": "GET",
+                "datatype": "json",
+            },
+            columnDefs: [
+                { width: "95px", targets: 5 }
+            ],
+            "columns": [
+                { "data": "id" },
+                { "data": "Role" },
+                { "data": "Email" },
+                { "data": "First Name" },
+                { "data": "Last Name" },
+                {
+                    "orderable": false,
+                    "data": "id",
+                    "defaultContent": '',
+                    "render": function (data) {
+                        return '<button type="button" class="btn btn-outline-warning btn-sm" onclick="PopupForm(\'/Users_Upsert?id=' + data + '\')"><span>Edit</span></button>' + (data > 1 ? ' <button type="button" class="btn btn-outline-danger btn-sm" onclick="PopupForm(\'/Users_Delete?id=' + data + '\')"><span>Delete</span></button>' : '');
+                    }
+                }
+            ],
+            //"dom": "B<'dt-toolbar'<'col-xs-12 col-sm-12'f><'col-sm-12 col-xs-12 hidden-xs'l>" +
+            //    "t>r" +
+            //    "<'dt-toolbar-footer'<'col-sm-12 col-xs-12 hidden-xs'i><'col-xs-12 col-sm-12'p>>",
+        });
+
+    });
+
+    jQuery.fn.dataTableExt.oApi.fnProcessingIndicator = function (oSettings, onoff) {
+        if (onoff === undefined) {
+            onoff = true;
+        }
+        this.oApi._fnProcessingDisplay(oSettings, onoff);
+    };
+
+    $.fn.modal.Constructor.prototype.enforceFocus = function () { };
+
+    var Popup = null;
+    function PopupForm(url) {
+        if (typeof Popup !== 'undefined' && Popup !== null)
+            return false;
+        var formDiv = $('<div/>');
+        $.get(url)
+            .done(function (response) {
+                formDiv.html(response);
+                if (typeof Popup !== 'undefined' && Popup !== null)
+                    return false;
+                Popup = formDiv.dialog({
+                    autoOpen: true,
+                    resizable: false,
+                    //title: 'Fill Employee Details',
+                    //height: 500,
+                    modal: true,
+                    width: 600,
+                    close: function () {
+                        Popup.dialog('destroy').remove();
+                        Popup = null;
+                    },
+                    create: function () {
+                        if (typeof UI_Footer !== 'undefined' && UI_Footer !== null) {
+                            formDiv.dialog("option", "buttons", [{ text: "" }]);
+                            $("div.ui-dialog-buttonset").html(UI_Footer);
+                            UI_Footer = null;
+                        } else {
+
+                        }
+                    }
+                });
+                $('form').on('submit', function (e) {
+                    e.preventDefault();
+                    SubmitForm(this);
+                });
+            }).fail(function () {
+                location.reload();
+            });
+    }
+
+    function SubmitForm(form) {
+        //$.validator.unobtrusive.parse(form);
+        if ($(form).valid()) {
+            $.ajax({
+                type: "POST",
+                url: form.action,
+                data: $(form).serialize(),
+                success: function (data) {
+                    if (data.success) {
+                        Popup.dialog('close');
+                        dataTable.ajax.reload();
+
+                        $.notify('Data Saved Successfully', {
+                            globalPosition: "top center",
+                            className: "success"
+                        });
+                    }
+                }
+            });
+        }
+        return false;
+    }
+
+</script>
+{% endblock %}

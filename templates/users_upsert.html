@@ -1,0 +1,146 @@
+﻿{% block head %}
+<style>
+    .col-md-2 .col-md-8 {
+        padding-left: 0px;
+        padding-right: 0px;
+    }
+
+    .text-box {
+        padding-left: 13px;
+        padding-right: 13px;
+    }
+
+    .ui-dialog-content.ui-widget-content {
+        padding-top: 0px;
+        padding-bottom: 0px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    .modal-header {
+        padding-top: 5px;
+        padding-bottom: 10px;
+    }
+
+    .well.bs-component {
+        padding-top: 10px;
+        margin-bottom: 0px;
+        bottom: 5px;
+        padding-bottom: 10px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    .select2-results__options {
+        direction: rtl;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="modal-header {{ "bg-success" if data.id == -1 else "bg-warning" }}" style="padding-top: 5px; padding-bottom: 5px;">
+    <h4 class="modal-title text-white" id="myModalLabel">{{ "Add New" if data.id == -1 else "Edit" }} User</h4>
+</div>
+<div class="modal-body no-padding">
+    <form class="form-valide" action="/Users_Upsert" method="post" style="width: 100%;">
+        <div class="well bs-component">
+            <div class="smart-form">
+                <input type="hidden" class="form-control" id="val-user_id" name="val-user_id" placeholder="User" value="{{ data.id }}">
+                <fieldset style="padding-top: 5px;">
+                    <section>
+                        <div class="form-group row">
+                            <label class="control-label col-md-4">First User Name</label>
+                            <div class="col-md-8" style="padding-left: 0px; padding-right: 0px;">
+                                <div class="input-group mb-2">
+                                    <div class="input-group-prepend">
+                                        <div class="input-group-text"><i class="icon-append fa fa-user"></i></div>
+                                    </div>
+                                    <input type="text" class="form-control" id="val-First_Name" name="val-First_Name" placeholder="" value="{{ data.First_Name }}" required="required">
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section>
+                        <div class="form-group row">
+                            <label class="control-label col-md-4">Last User Name</label>
+                            <div class="col-md-8" style="padding-left: 0px; padding-right: 0px;">
+                                <div class="input-group mb-2">
+                                    <div class="input-group-prepend">
+                                        <div class="input-group-text"><i class="icon-append fa fa-user"></i></div>
+                                    </div>
+                                    <input type="text" class="form-control" id="val-Last_Name" name="val-Last_Name" placeholder="" value="{{ data.Last_Name }}" required="required">
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section>
+                        <div class="form-group row">
+                            <label class="control-label col-md-4">Email</label>
+                            <div class="col-md-8" style="padding-left: 0px; padding-right: 0px;">
+                                <div class="input-group mb-2">
+                                    <div class="input-group-prepend">
+                                        <div class="input-group-text"><i class="icon-append fa fa-envelope"></i></div>
+                                    </div>
+                                    <input type="email" class="form-control" id="val-Email" name="val-Email" placeholder="" value="{{ data.Email }}" required="required">
+                                </div>
+                           </div>
+                        </div>
+                    </section>
+
+                    <section>
+                        <div class="form-group row">
+                            <label class="control-label col-md-4">Password</label>
+                            <div class="col-md-8" style="padding-left: 0px; padding-right: 0px;">
+                                <div class="input-group mb-2">
+                                    <div class="input-group-prepend">
+                                        <div class="input-group-text"><i class="icon-append fa fa-lock"></i></div>
+                                    </div>
+                                    <input type="password" class="form-control" id="val-Password" name="val-Password" placeholder="" value="{{ data.Password }}" onfocus="this.value='';" required="required">
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!--<section>
+                        <div class="form-group row">
+                            <label class="control-label col-md-4">Password Confirmation</label>
+                            <div class="col-md-8" style="padding-left: 0px; padding-right: 0px;">
+                                <div class="input-group mb-2">
+                                    <div class="input-group-prepend">
+                                        <div class="input-group-text"><i class="icon-append fa fa-lock"></i></div>
+                                    </div>
+                                    <input type="password" class="form-control" id="val-PasswordConfirm" name="val-PasswordConfirm" placeholder="" value="{{ data.Password }}" onfocus="this.value='';" required="required">
+                                </div>
+                            </div>
+                        </div>
+                    </section>-->
+
+                    <section>
+                        <div class="form-group row">
+                            <label class="control-label col-md-4">Role</label>
+                            <div class="col-md-8" style="padding-left: 0px;padding-right: 0px;">
+                                <select class="form-control" id="val-Role" name="val-Role" value="{{ data.Role }}">
+                                    <option value="Admin" {{ "selected" if data.Role == "admin" else "" }}>Admin</option>
+                                    <option value="User" {{ "selected" if data.Role == "user" else "" }}>User</option>
+                                </select>
+                            </div>
+                        </div>
+                    </section>
+
+                </fieldset>
+
+                <footer style="padding-bottom: 0px; padding-top: 0px;">
+                    <button type="button" class="btn btn-info text-white" onclick="Popup.dialog('close');" style="margin-right:30px;">
+                        Exit
+                    </button>
+                    <button type="submit" class="btn {{ "bg-success" if data.id == -1 else "bg-warning" }} text-white">
+                        {{ "Add New" if data.id == -1 else "Edit" }}
+                    </button>
+                </footer>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

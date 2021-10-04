@@ -1,9 +1,71 @@
 {% extends "_layout.html" %}
 
 {% block head %}
+<!-- Clockpicker -->
+<link href="templates/vendor/clockpicker/css/bootstrap-clockpicker.min.css" rel="stylesheet">
 <style>
-    label {
+    label, .dropdown-check-list {
         color: black;
+    }
+
+    .dropdown-check-list {
+        display: inline-block;
+    }
+
+        .dropdown-check-list .anchor {
+            position: relative;
+            cursor: pointer;
+            display: inline-block;
+            padding: 5px 50px 5px 10px;
+            border: 1px solid #ccc;
+        }
+
+            .dropdown-check-list .anchor:after {
+                position: absolute;
+                content: "";
+                border-left: 2px solid black;
+                border-top: 2px solid black;
+                padding: 5px;
+                right: 10px;
+                top: 20%;
+                -moz-transform: rotate(-135deg);
+                -ms-transform: rotate(-135deg);
+                -o-transform: rotate(-135deg);
+                -webkit-transform: rotate(-135deg);
+                transform: rotate(-135deg);
+            }
+
+            .dropdown-check-list .anchor:active:after {
+                right: 8px;
+                top: 21%;
+            }
+
+        .dropdown-check-list ul.items {
+            padding: 2px;
+            display: none;
+            margin: 0;
+            border: 1px solid #ccc;
+            border-top: none;
+        }
+
+            .dropdown-check-list ul.items li {
+                list-style: none;
+            }
+
+        .dropdown-check-list.visible .anchor {
+            color: #0094ff;
+        }
+
+        .dropdown-check-list.visible .items {
+            display: block;
+        }
+
+    input[type="checkbox"] {
+        margin-right: 10px;
+    }
+
+    .clockpicker-popover .popover-content {
+        padding: 0px;
     }
 </style>
 {% endblock %}
@@ -27,6 +89,53 @@
                 </div>
                 <div class="card-body">
                     <div class="form-validation">
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <div class="form-group row">
+                                    <label class="col-lg-4 col-form-label" for="val-wms_ws_sleep">
+                                        Working Days:<span class="text-danger">*</span>
+                                    </label>
+                                    <div class="col-lg-6">
+                                        <div id="list-Days" class="dropdown-check-list" tabindex="100">
+                                            <span id="list-Days_Lable" class="anchor" style="overflow: hidden; max-height: 30px; white-space: nowrap; text-overflow: ellipsis;">Select Working Days</span>
+                                            <ul class="items">
+                                                <li><input type="checkbox" name="val-ws_Days" value="6" {{ "checked" if data.ws_Days["6"] == 1 else "" }} />Sunday</li>
+                                                <li><input type="checkbox" name="val-ws_Days" value="0" {{ "checked" if data.ws_Days["0"] == 1 else "" }} />Monday </li>
+                                                <li><input type="checkbox" name="val-ws_Days" value="1" {{ "checked" if data.ws_Days["1"] == 1 else "" }} />Tuesday </li>
+                                                <li><input type="checkbox" name="val-ws_Days" value="2" {{ "checked" if data.ws_Days["2"] == 1 else "" }} />Wednesday </li>
+                                                <li><input type="checkbox" name="val-ws_Days" value="3" {{ "checked" if data.ws_Days["3"] == 1 else "" }} />Thursday </li>
+                                                <li><input type="checkbox" name="val-ws_Days" value="4" {{ "checked" if data.ws_Days["4"] == 1 else "" }} />Friday </li>
+                                                <li><input type="checkbox" name="val-ws_Days" value="5" {{ "checked" if data.ws_Days["5"] == 1 else "" }} />Saturday </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group row">
+                                    <label class="col-lg-2 col-form-label">
+                                        From:
+                                    </label>
+                                    <div class="col-lg-4 input-group clockpicker">
+                                        <input type="text" class="form-control" name="val-ws_Time_From" value="{{ data.ws_Time['From'] }}"> <span class="input-group-append">
+                                            <span class="input-group-text">
+                                                <i class="fa fa-clock-o"></i>
+                                            </span>
+                                        </span>
+                                    </div>
+                                    <label class="col-lg-2 col-form-label">
+                                        To:
+                                    </label>
+                                    <div class="col-lg-4 input-group clockpicker">
+                                        <input type="text" class="form-control" name="val-ws_Time_To" value="{{ data.ws_Time['To'] }}"> <span class="input-group-append">
+                                            <span class="input-group-text">
+                                                <i class="fa fa-clock-o"></i>
+                                            </span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         <div class="row">
                             <div class="col-sm-6">
                                 <div class="form-group row">
@@ -242,6 +351,10 @@
 <script src="templates/vendor/jquery-validation/jquery.validate.min.js"></script>
 <!-- Form validate init -->
 <script src="templates/js/plugins-init/jquery.validate-init.js"></script>
+<!-- clockpicker -->
+<script src="templates/vendor/clockpicker/js/bootstrap-clockpicker.min.js"></script>
+<!-- Clockpicker init -->
+<script src="templates/js/plugins-init/clock-picker-init.js"></script>
 <script>
     $("a.nav-link").click(function () {
         val = $(this).attr("href");
@@ -260,5 +373,34 @@
                 break;
         }
     });
+
+    var checkList = document.getElementById('list-Days');
+    function list_Days_Lable() {
+        txt1 = ""
+        i = 0;
+        $('input[name="val-ws_Days"]:checked').each(function () {
+            i++;
+            t1 = $(this).parent().contents().eq(1).text().substring(0, 3);
+            txt1 += t1 + ", ";
+        });
+        if (txt1 == "") {
+            txt1 = "(None)"
+        } else if (i == 7) {
+            txt1 = "(ALL Days)"
+        } else {
+            txt1 = txt1.replace(/,\s*$/, "");
+        }
+
+        $("#list-Days_Lable").text(txt1);
+    }
+    list_Days_Lable();
+
+    checkList.getElementsByClassName('anchor')[0].onclick = function (evt) {
+        if (checkList.classList.contains('visible'))
+            checkList.classList.remove('visible');
+        else
+            checkList.classList.add('visible');
+        list_Days_Lable();
+    }
 </script>
 {% endblock %}
