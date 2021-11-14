@@ -1,5 +1,5 @@
 import requests
-import datetime
+import datetime, time
 
 class Milvus_FMS_Data:
     v_host: str = ""
@@ -103,4 +103,5 @@ class Milvus_FMS_Data:
             iRet = 0
             self.Robots_State["Error_Message"] = repr(e)
             print(e)
+            time.sleep(1)
         return iRet

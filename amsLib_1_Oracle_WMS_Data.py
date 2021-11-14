@@ -1,5 +1,5 @@
 import requests
-import datetime
+import datetime, time
 
 class Oracle_WMS_Data:
     v_host: str = ""
@@ -175,6 +175,7 @@ class Oracle_WMS_Data:
             iRet = 0
             print(e)
             self.task_State["Error_Message"] = repr(e) #str(e)
+            time.sleep(1)
         return iRet
 
     def sync_WMS_allocation_processor(self):
@@ -241,6 +242,7 @@ class Oracle_WMS_Data:
             iRet = 0
             print(e)
             self.allocation_State["Error_Message"] = repr(e)
+            time.sleep(1)
         return iRet
 
     def sync_WMS_active_location(self):
@@ -292,4 +294,5 @@ class Oracle_WMS_Data:
             iRet = {"data":arr_data}
         except Exception as e: 
             print(e)
+            time.sleep(1)
         return iRet
